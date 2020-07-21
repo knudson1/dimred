@@ -1,0 +1,88 @@
+\documentclass{article}
+
+ \usepackage{url} 
+\usepackage{amsthm,amsmath,amssymb,indentfirst,float}
+\usepackage{verbatim}
+\usepackage[sort,longnamesfirst]{natbib}
+\newcommand{\pcite}[1]{\citeauthor{#1}'s \citeyearpar{#1}}
+\newcommand{\ncite}[1]{\citeauthor{#1}, \citeyear{#1}}
+\DeclareMathOperator{\logit}{logit}
+    \DeclareMathOperator{\var}{Var}
+   %  \DeclareMathOperator{\det}{det}
+     \DeclareMathOperator{\diag}{diag}
+
+\usepackage{geometry}
+%\geometry{hmargin=1.025in,vmargin={1.25in,2.5in},nohead,footskip=0.5in} 
+%\geometry{hmargin=1.025in,vmargin={1.25in,0.75in},nohead,footskip=0.5in} 
+%\geometry{hmargin=2.5cm,vmargin={2.5cm,2.5cm},nohead,footskip=0.5in}
+
+\renewcommand{\baselinestretch}{1.25}
+
+\usepackage{amsbsy,amsmath,amsthm,amssymb,graphicx}
+
+\setlength{\baselineskip}{0.3in} \setlength{\parskip}{.05in}
+
+
+\newcommand{\cvgindist}{\overset{\text{d}}{\longrightarrow}}
+\DeclareMathOperator{\PR}{Pr} 
+\DeclareMathOperator{\cov}{Cov}
+
+
+\newcommand{\sX}{{\mathsf X}}
+\newcommand{\tQ}{\tilde Q}
+\newcommand{\cU}{{\cal U}}
+\newcommand{\cX}{{\cal X}}
+\newcommand{\tbeta}{\tilde{\beta}}
+\newcommand{\tlambda}{\tilde{\lambda}}
+\newcommand{\txi}{\tilde{\xi}}
+
+
+
+
+\title{Dimension Reduction of Random Effects for Generalized Linear Mixed Models}
+
+\author{Christina Knudson}
+
+\begin{document}
+\maketitle{}
+
+\begin{abstract}
+something
+\end{abstract}
+
+\section{Theory}
+
+Let $y=(y_1, \ldots, y_n)^T$ be a vector of observed data. Let $u=(u_1,\ldots,u_q)'$ be a vector of unobserved random effects. Let $\beta$ be a vector of $p$ fixed effect parameters and let $\nu$ be a vector of $T$ variance components for the random effects. Let $\theta$ be a vector of length $p+T$ containing all unknown parameters. Then the data $y$ are distributed conditionally on the random effects according to $f_\theta(y|u)$ and the random effects are distributed according to $f_\theta(u)$. Although $f_\theta(u)$ does not actually depend on $\beta$ and $f_\theta(y|u)$ does not depend on $\nu$, we write the density like this to keep notation simple in future equations.
+
+Since $u$ is unobservable, the log likelihood must be expressed by integrating out the random effects:
+\begin{align}
+l(\theta)=\log \int f_\theta(y|u) f_\theta(u) \; du
+\end{align}
+
+
+\section{Model fitting function} 
+This will be the main function the user will use. The users will need to specify the response and the predictors using the R formula mini-language as interpreted by model.matrix. They'll need to specify the  family (either binomial or Poisson, though  really any exponential family would work and I could add more later). The user will specify the random effects in the same way as for the R function \texttt{reaster} in the R package
+ \texttt{aster} \citep{aster-package}. That is, random effects will be expressed using the R formula mini-language. Thus, a sample command with fixed predictors $x_1$ and $x_2$ and with random effects $school$ and $classroom$ (in data set as categorical variables ) would look like
+\begin{verbatim}
+glmm(y ~ x1+ x2, list(~0+school,~0+classroom),  family.glmm="binomial.glmm", 
+data=schooldat,varcomps.names=c("school","classroom"),varcomps.equal=c(1,2),
+debug=FALSE )
+ \end{verbatim} 
+Section \ref{sec:fam} contains more information on the family.
+
+%$\Box$ Most of the time (but not all the time), the random effects formula should be ``0+...'' If the user does not specify ``0+'' then I want to give a warning something like ``Did you mean to start your random effects formula with 0+? Most models require this, so please check if you meant to include it.''
+
+
+%%Families%%
+\section{Families} \label{sec:fam}
+This function will be hidden from the user.  These functions (along with the distribution of random effects) are necessary to approximate the log likelihood.
+
+
+\subsection{Distribution of random effects is normal (\texttt{distRand})}\label{sec:distRand}
+In this subsection, I discuss both the assumed distribution of the unobserved random effects ($N(0,D)$) and the distribution used to generate the simulated random effects.  The equations in this section will provide $\tilde{f}(u)$, $\log f_\theta(u)$, $\nabla \log f_\theta(u)$, and $\nabla^2 \log f_\theta(u)$ for equation \ref{eq:MCLA}. 
+
+
+\bibliographystyle{apalike}
+\bibliography{brref}
+
+\end{document}

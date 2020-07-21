@@ -1,0 +1,8 @@
+\begin{thebibliography}{}
+
+\bibitem[Geyer, 2014]{aster-package}
+Geyer, C.~J. (2014).
+\newblock {R} package \texttt{aster} (aster models), version .8-30.
+\newblock {\em \url{http://cran.r-project.org/package=aster}}.
+
+\end{thebibliography}
