@@ -41,46 +41,86 @@
 
 \title{Dimension Reduction of Random Effects for Generalized Linear Mixed Models}
 
-\author{Christina Knudson}
+\author{Zachary F, Clare Hillmer,  Adit Jain, Christina Knudson}
 
 \begin{document}
 \maketitle{}
 
 \begin{abstract}
-something
+Welcome to the fun and beautiful world of latex. Here is a quick rundown but there's tons of excellent resources online.
 \end{abstract}
 
-\section{Theory}
+\section{Equations and Code}
+If you want to display math in the body of the text, you have to use dollar signs.
+Let $y=(y_1, \ldots, y_n)^T$ be a vector of observed data. Let $u=(u_1,\ldots,u_q)'$ be a vector of unobserved random effects. Let $\beta$ be a vector of $p$ fixed effect parameters and let $\nu$ be a vector of $T$ variance components for the random effects. 
 
-Let $y=(y_1, \ldots, y_n)^T$ be a vector of observed data. Let $u=(u_1,\ldots,u_q)'$ be a vector of unobserved random effects. Let $\beta$ be a vector of $p$ fixed effect parameters and let $\nu$ be a vector of $T$ variance components for the random effects. Let $\theta$ be a vector of length $p+T$ containing all unknown parameters. Then the data $y$ are distributed conditionally on the random effects according to $f_\theta(y|u)$ and the random effects are distributed according to $f_\theta(u)$. Although $f_\theta(u)$ does not actually depend on $\beta$ and $f_\theta(y|u)$ does not depend on $\nu$, we write the density like this to keep notation simple in future equations.
-
-Since $u$ is unobservable, the log likelihood must be expressed by integrating out the random effects:
 \begin{align}
 l(\theta)=\log \int f_\theta(y|u) f_\theta(u) \; du
 \end{align}
+\textbf{The align environment is nice for typesetting equations. It'll give the equations numbers by default.}
+
+Here's another equation. This one has fractions and exponents and sums.
+\begin{align}\label{eq:myvalue}
+v_\theta(u_k,y) = \dfrac{e^{b_k-a}}{ \sum_{k=1}^m e^{b_k-a}} 
+\end{align}
+
+And we can refer to it with \ref{eq:myvalue}. You can opt out of the equation numbers by using an asterisk. Check it out:
+
+\begin{align*}
+G &= \sum_{k=1}^m \nabla \log f_\theta (u_k,y) v_\theta(u_k,y)\\ \label{eq:gradient}
+&= \sum_{k=1}^m \nabla \left[  \log f_\theta(y|u_k) + \log f_\theta (u_k)  \right] v_\theta(u_k,y)\\
+&= \sum_{k=1}^m  \left[ \nabla \log f_\theta(y|u_k) + \nabla\log f_\theta (u_k)  \right] v_\theta(u_k,y)\\
+&= \sum_{k=1}^m  \left[ \dfrac{\partial}{\partial \beta} \log f_\theta(y|u_k) \; \; \; \;  \dfrac{\partial}{\partial \nu} \log f_\theta(y|u_k) \right] v_\theta(u_k,y)+ \left[ \dfrac{\partial}{\partial \beta} \log f_\theta(u_k) \; \; \; \; \dfrac{\partial}{\partial \nu} \log f_\theta(u_k) \right] v_\theta(u_k,y)\\
+\end{align*}
+ You need to typeset it a couple times to make the reference numbers show up.  
+You can also refer to a section in a similar way. Section \ref{sec:lists} contains more information on the family. Section \ref{sec:bullets}  shows you can also refer to subsections.
 
 
-\section{Model fitting function} 
-This will be the main function the user will use. The users will need to specify the response and the predictors using the R formula mini-language as interpreted by model.matrix. They'll need to specify the  family (either binomial or Poisson, though  really any exponential family would work and I could add more later). The user will specify the random effects in the same way as for the R function \texttt{reaster} in the R package
- \texttt{aster} \citep{aster-package}. That is, random effects will be expressed using the R formula mini-language. Thus, a sample command with fixed predictors $x_1$ and $x_2$ and with random effects $school$ and $classroom$ (in data set as categorical variables ) would look like
+You'll notice this equation has multiple lines. To align the equal signs, we use  ampersand \&. 
+
+\textbf{The verbatim environment is really nice for showing R code.}
 \begin{verbatim}
 glmm(y ~ x1+ x2, list(~0+school,~0+classroom),  family.glmm="binomial.glmm", 
 data=schooldat,varcomps.names=c("school","classroom"),varcomps.equal=c(1,2),
 debug=FALSE )
- \end{verbatim} 
-Section \ref{sec:fam} contains more information on the family.
+ \end{verbatim}
+
+
 
 %$\Box$ Most of the time (but not all the time), the random effects formula should be ``0+...'' If the user does not specify ``0+'' then I want to give a warning something like ``Did you mean to start your random effects formula with 0+? Most models require this, so please check if you meant to include it.''
 
 
 %%Families%%
-\section{Families} \label{sec:fam}
-This function will be hidden from the user.  These functions (along with the distribution of random effects) are necessary to approximate the log likelihood.
+\section{Lists and Such} \label{sec:lists}
 
 
-\subsection{Distribution of random effects is normal (\texttt{distRand})}\label{sec:distRand}
-In this subsection, I discuss both the assumed distribution of the unobserved random effects ($N(0,D)$) and the distribution used to generate the simulated random effects.  The equations in this section will provide $\tilde{f}(u)$, $\log f_\theta(u)$, $\nabla \log f_\theta(u)$, and $\nabla^2 \log f_\theta(u)$ for equation \ref{eq:MCLA}. 
+\subsection{Bullets}\label{sec:bullets}
+Here's how to make a list with bullets
 
+\begin{itemize}
+
+\item First item
+\item Other item
+\end{itemize}
+
+You can get fancy with bullets if you want.
+
+\subsection{Numbered List}
+
+\begin{enumerate}
+
+\item First item
+\item Other item
+\end{enumerate}
+
+\section{Info on citations}
+In the paper folder, I added brref.bib, which is the file that holds the bibliography info. Rather than  type the citation yourself, you can put your bib info in the brref file (using the setup that you see in there). You can see, for example, that I cite the R package aster by Charlie Geyer. In the brref file, the shortcut name is "aster-package" so when I want to cite this work in the paper, I can use one of the following options:
+\begin{itemize}
+\item The aster package \citep{aster-package} was created for life history models.
+\item  \citet{aster-package} produced an R package that can analyze the radish data 
+\end{itemize}
+
+To make the citations and bibliography work, typeset the document a few times (pdfLaTeX), typeset with BibTeX, and then typeset with pdfLaTeX again. I don't remember the right number of times for each, so I usually do each a couple. It's easier to just hit typeset (or use the typeset keyboard shortcuts) than to memorize stuff like numbers. 
 
 \bibliographystyle{apalike}
 \bibliography{brref}
