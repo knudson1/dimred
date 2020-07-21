@@ -1,1 +1,2 @@
 library(glmm)
+data(salamander)
