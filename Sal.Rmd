@@ -1,0 +1,85 @@
+---
+title: "Sal"
+author: "Clare"
+date: "7/21/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dbplyr)
+library(plyr)
+```
+
+```{r}
+library(glmm)
+data("salamander")
+
+salamander
+m<-10^3
+clust<-makeCluster(4)
+set.seed(1234)
+
+ptm<-proc.time()
+sal<-glmm(Mate~0+Cross,
+          random = list(~0+Female,~0+Male),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+proc.time()-ptm
+summary(sal)
+```
+
+```{r}
+female<-sal$u.pql[1:60]
+#rounding digits to one number
+roundedF<-round(female, digits = 1)
+male<-sal$u.pql[61:120]
+#rounding digits to one number
+roundedM<-round(male, digits=1)
+#renaming the rounded 
+numberedF<-roundedF
+#initializing id
+x<-10
+#changing the random effects to id numbers
+for(i in 1:60){
+  temp<-numberedF[i]
+  for(j in i:60){
+    if(temp == numberedF[j] && numberedF[j]<10){
+      numberedF[j]<-x
+    }
+  }
+  x<-x+1
+}
+
+#same for the males
+numberedM <-roundedM
+x=10
+for(i in 1:60){
+  temp<-numberedM[i]
+  for(j in i:60){
+    if(temp == numberedM[j] && numberedM[j]<10){
+      numberedM[j]<-x
+    }
+  }
+  x<-x+1
+}
+
+salamander$Female_Reduced<-mapvalues(salamander$Female,c(10:69),numberedF)
+salamander$Male_Reduced<-mapvalues(salamander$Male, c(10:69), numberedM)
+m<-10^3
+clust<-makeCluster(4)
+set.seed(1234)
+
+ptm<-proc.time()
+#running same dataset Female_Reduced
+sal<-glmm(Mate~0+Cross,
+          random = list(~0+Female_Reduced,~0+Male_Reduced),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+proc.time()-ptm
+summary(sal)
+```
+
