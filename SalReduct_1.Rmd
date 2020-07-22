@@ -1,0 +1,104 @@
+
+```{r}
+#needed libraries
+library(plyr)
+library(glmm)
+```
+
+
+```{r}
+#Set the seed and access salamander data
+set.seed(1234)
+data("salamander")
+
+#baseline test to see how long it takes to perform a glmm with no dimension reduction
+ptm<-proc.time()
+sal <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + Female, ~ 0 + Male), varcomps.names = c("F", "M"), data = salamander, family.glmm = bernoulli.glmm, m = 10^3)
+no_reduct <- proc.time()-ptm
+
+#accessing the assigned random effects for females and rounding them to one digit
+randEff_f <- round(sal$u.pql[1:60],digits = 1)
+
+#Adding this column to the salamander data frame for reference
+salamander$Rand_F <- randEff_f
+
+#setting the initial id number
+id_num <-10
+
+#simple double for loop that actually does the dimension reducing for females
+for(index in 1:60){
+  
+  placeholder <- randEff_f[index]
+  
+  for(index2 in index:60){ 
+    #Need to check if this salamander needs a new ID
+    if(placeholder == randEff_f[index2] && randEff_f[index2] < 10)
+      
+      {
+      randEff_f[index2] <- id_num
+      }
+  }
+  #step function
+  id_num = id_num + 1
+}
+
+
+#accessing the assigned random effects for male and rounding them to one digit
+randEff_m <-round(sal$u.pql[61:120], digits = 1)
+
+#Adding this column to the salamander data frame for reference
+salamander$Rand_M <- randEff_m
+
+#initializing the id number again
+id_num <- 10
+
+#simple double for loop that actually does the dimension reducing for males
+#same as females loop
+for(index3 in 1:60){
+  
+  placeholder <-randEff_m[index3]
+  
+  for(index4 in index3:60){
+    
+    if(placeholder == randEff_m[index4] && randEff_m[index4] < 10)
+      
+      {
+      randEff_m[index4] <- id_num
+      }
+  }
+  id_num = id_num + 1
+}
+
+
+#going into the salamander data table and mapping the ids to their random effects for both male and female
+#at the same time adding these as columns to the salamander data table
+salamander$DR_F<-mapvalues(salamander$Female,from = c(10:69),to = randEff_f)
+
+salamander$DR_M<-mapvalues(salamander$Male,from = c(10:69), to = randEff_m)
+
+
+#some simple phrases that show the new number of dimensions for female and male
+x <- "This is the new number of dimension for the female salamanders: "
+print(x)
+length(unique(salamander$DR_F))
+
+y <- "This is the new number of dimension for the male salamanders: "
+print(y)
+length(unique(salamander$DR_M))
+
+#a comparison of the computation times is next
+a <- "This is how long it takes to run the original model with NO dimension reduction"
+print(a)
+no_reduct
+
+#This runs the final reduced dimension glmm
+ptm<-proc.time()
+
+DR_sal <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + DR_F, ~ 0 + DR_M), varcomps.names = c("F", "M"), data = salamander, family.glmm = bernoulli.glmm, m = 10^3)
+
+reduct <- proc.time()-ptm
+
+b <- "This is how long it takes to run the original model WITH dimension reduction"
+print(b)
+reduct
+```
