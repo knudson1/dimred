@@ -13,10 +13,19 @@ library(dbplyr)
 ReduceDim <- function(dataCol, pqlVal, roundDigits = 1){
   pqlVal <- round(pqlVal, digits = roundDigits)
   
-  dataPqlRound <- data.frame(dataCol = dataCol,pqlVal = pqlVal)
+  dataPqlRound <- data.frame(dataCol = levels(dataCol),pqlVal = pqlVal)
   
-  uniqueData <- unique(dataPqlRound, by = "pqlVal")
+  ## uniqueData <- unique(dataPqlRound, by = 'pqlVal')
   
-  findID <- function(pqlVal)
+  findID <- function(x){
+    return(uniqueData[uniqueData$pqlVal == x,]$dataCol)
+  }
+  
+  
+ (sapply(dataCol, findID))
+  
+ ## dataCol%>%
+}
 ```
+
 
