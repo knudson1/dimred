@@ -1,0 +1,22 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r}
+library(glmm)
+library(plyr)
+library(dbplyr)
+```
+
+```{r}
+ReduceDim <- function(dataCol, pqlVal, roundDigits = 1){
+  pqlVal <- round(pqlVal, digits = roundDigits)
+  
+  dataPqlRound <- data.frame(dataCol = dataCol,pqlVal = pqlVal)
+  
+  uniqueData <- unique(dataPqlRound, by = "pqlVal")
+  
+  findID <- function(pqlVal)
+```
+
