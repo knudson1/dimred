@@ -18,7 +18,10 @@ library(plyr)
 # Salamander Data
 data("salamander")
 # Initial GLMM Model
+#### Process Time Without any Dimension Reduction
+ptm <- proc.time()
 sal <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + Female, ~ 0 + Male), varcomps.names = c("F", "M"), data = salamander, family.glmm = bernoulli.glmm, m = 10^3)
+proc.time()-ptm
 ```
 ### Reducing Dimensions
 #### Reducing Female Dimensions:
@@ -50,24 +53,17 @@ cat("Original Dimension:", length(unique(salamander$Male)))
 cat("Reduced Dimension:",length(unique(salamander$Male_red)))
 ```
 
-#### Process Time Without any Dimension Reduction
-```{r}
-ptm <- proc.time()
-sal <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + Female, ~ 0 + Male), varcomps.names = c("F", "M"),
-             data = salamander, family.glmm = bernoulli.glmm, m = 10^3)
- proc.time() - ptm
-```
-
 #### Process Time With Dimension Reduction
 
 ```{r}
 ptm <- proc.time()
-sal <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + Female_red, ~ 0 + Male_red), varcomps.names = c("F", "M"),
+sal_red <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + Female_red, ~ 0 + Male_red), varcomps.names = c("F", "M"),
             data = salamander, family.glmm = bernoulli.glmm, m = 10^3)
  proc.time() - ptm
 ```
 ```{r}
-sal$beta
+p_nodr<-expit(salamander$Cross%>% sal$beta[.] +salamander$Male %>% as.numeric() %>% sal$u.pql[61:120][.]  + salamander$Female %>% as.numeric() %>% sal$u.pql[0:60][.])
+p_dr<-expit(salamander$Cross%>% sal_red$beta[.] +salamander$Male_red %>% as.numeric() %>% sal_red$u.pql[26:50][.]  + salamander$Female_red %>% as.numeric() %>% sal_red$u.pql[0:25][.])
 ```
 
 
