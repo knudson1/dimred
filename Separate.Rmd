@@ -1,0 +1,137 @@
+---
+title: "Untitled"
+author: "Clare"
+date: "7/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(glmm)
+library(plyr)
+library(dbplyr)
+```
+
+```{r}
+library(glmm)
+data("salamander")
+
+salamander
+m<-10^3
+clust<-makeCluster(4)
+set.seed(1234)
+
+ptm<-proc.time()
+sal<-glmm(Mate~0+Cross,
+          random = list(~0+Female,~0+Male),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+proc.time()-ptm
+Beta<-sal$beta
+```
+
+```{r}
+F_R <- levels(salamander$Female)[1:10]
+F_R <- append(F_R, levels(salamander$Female)[21:30])
+F_R <- append(F_R, levels(salamander$Female)[41:50])
+F_R
+
+M_R <- levels(salamander$Male)[1:10]
+M_R <- append(M_R, levels(salamander$Male)[21:30])
+M_R <- append(M_R, levels(salamander$Male)[41:50])
+M_R
+
+F_W <- levels(salamander$Female)[11:20]
+F_W <- append(F_W, levels(salamander$Female)[31:40])
+F_W <- append(F_W, levels(salamander$Female)[51:60])
+F_W
+
+M_W <- levels(salamander$Female)[11:20]
+M_W <- append(M_W, levels(salamander$Female)[31:40])
+M_W <- append(M_W, levels(salamander$Female)[51:60])
+M_W
+```
+
+```{r}
+female<-sal$u.pql[1:60]
+F_RPql <- female[1:10]
+F_RPql <- append(F_RPql, female[21:30])
+F_RPql <- append(F_RPql, female[41:50])
+F_RPql
+
+F_WPql <- female[11:20]
+F_WPql <- append(F_WPql, female[31:40])
+F_WPql <- append(F_WPql, female[51:60])
+F_WPql
+
+males<-sal$u.pql[61:120]
+M_RPql <- males[1:10]
+M_RPql <- append(M_RPql, males[21:30])
+M_RPql <- append(M_RPql, males[41:50])
+M_RPql
+
+M_WPql <- males[11:20]
+M_WPql <- append(M_WPql, males[31:40])
+M_WPql <- append(M_WPql, males[51:60])
+M_WPql
+```
+
+```{r}
+library(glmm)
+data("salamander")
+
+F_R1<-data.frame(num= F_R)
+F_W1<-data.frame(num=F_W)
+
+R_Female <- ReduceDim(F_R1$num, F_RPql)
+NewR_F<-as.numeric(R_Female)+30
+W_Female<-ReduceDim(F_W1$num, F_WPql)
+
+Fdata<-NewR_F[1:10]
+Fdata<- append(Fdata, W_Female[1:10])
+Fdata<- append(Fdata, NewR_F[11:20])
+Fdata<- append(Fdata, W_Female[11:20])
+Fdata<- append(Fdata, NewR_F[21:30])
+Fdata<- append(Fdata, W_Female[21:30])
+Fdata
+```
+
+```{r}
+M_R1<-data.frame(num = M_R)
+M_W1<-data.frame(num = M_W)
+
+R_Male <- ReduceDim(M_R1$num, M_RPql)
+W_Male <- ReduceDim(M_W1$num, M_WPql)
+NewR_M <- as.numeric(R_Male)+30
+
+Mdata<-NewR_M[1:10]
+Mdata<- append(Mdata, W_Male[1:10])
+Mdata<- append(Mdata, NewR_M[11:20])
+Mdata<- append(Mdata, W_Male[11:20])
+Mdata<- append(Mdata, NewR_M[21:30])
+Mdata<- append(Mdata, W_Male[21:30])
+Mdata
+```
+
+```{r}
+salamander$Female_Reduced1<-mapvalues(salamander$Female,c(10:69),Fdata)
+salamander$Male_Reduced1<-mapvalues(salamander$Male, c(10:69), Mdata)
+```
+
+```{r}
+m<-10^3
+clust<-makeCluster(4)
+set.seed(1234)
+ptm<-proc.time()
+sal2<-glmm(Mate~0+Cross,
+          random = list(~0+Female_Reduced1,~0+Male_Reduced1),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+proc.time()-ptm
+DrBeta<-sal2$beta
+```
+
+
