@@ -16,6 +16,8 @@ library(dbplyr)
 ```
 
 ```{r}
+#regular code for the unreduced dataset
+
 library(glmm)
 data("salamander")
 
@@ -29,11 +31,13 @@ sal<-glmm(Mate~0+Cross,
           random = list(~0+Female,~0+Male),
           varcomps.names = c("F","M"), data=salamander,
           family.glmm = bernoulli.glmm, m=m, cluster = clust)
-proc.time()-ptm
+origTime10 <- proc.time()-ptm
 Beta<-sal$beta
 ```
 
 ```{r}
+#Separatating the Female and male id numbers into rough and white butts
+
 F_R <- levels(salamander$Female)[1:10]
 F_R <- append(F_R, levels(salamander$Female)[21:30])
 F_R <- append(F_R, levels(salamander$Female)[41:50])
@@ -56,6 +60,8 @@ M_W
 ```
 
 ```{r}
+#separating the random errors for female and male white and rough butts
+
 female<-sal$u.pql[1:60]
 F_RPql <- female[1:10]
 F_RPql <- append(F_RPql, female[21:30])
@@ -86,10 +92,15 @@ data("salamander")
 F_R1<-data.frame(num= F_R)
 F_W1<-data.frame(num=F_W)
 
+#Dimension reduction for female rough and white butts separately
 R_Female <- ReduceDim(F_R1$num, F_RPql)
 NewR_F<-as.numeric(R_Female)+30
 W_Female<-ReduceDim(F_W1$num, F_WPql)
 
+#reduced dimensions for females
+fLen10 <- length(levels(R_Female)) + length(levels(W_Female))
+
+#creating a new list of the 60 females with their new ids
 Fdata<-NewR_F[1:10]
 Fdata<- append(Fdata, W_Female[1:10])
 Fdata<- append(Fdata, NewR_F[11:20])
@@ -103,10 +114,15 @@ Fdata
 M_R1<-data.frame(num = M_R)
 M_W1<-data.frame(num = M_W)
 
+#dimension reduction for the male rough and white butts separately
 R_Male <- ReduceDim(M_R1$num, M_RPql)
 W_Male <- ReduceDim(M_W1$num, M_WPql)
 NewR_M <- as.numeric(R_Male)+30
 
+#reduced dimensions for males
+mLen10 <- length(levels(R_Male))+ length(levels(W_Male))
+
+#creating a new list of the 60 males with their new ids
 Mdata<-NewR_M[1:10]
 Mdata<- append(Mdata, W_Male[1:10])
 Mdata<- append(Mdata, NewR_M[11:20])
@@ -117,11 +133,13 @@ Mdata
 ```
 
 ```{r}
+#mapping the new list of male and female id's onto the salamander data
 salamander$Female_Reduced1<-mapvalues(salamander$Female,c(10:69),Fdata)
 salamander$Male_Reduced1<-mapvalues(salamander$Male, c(10:69), Mdata)
 ```
 
 ```{r}
+#running the glmm on the data with the separate ids for rough and white butts
 m<-10^3
 clust<-makeCluster(4)
 set.seed(1234)
