@@ -1,5 +1,5 @@
 ---
-title: "Untitled"
+title: "Dimension Reduction seperate for WS and RB"
 author: "Clare"
 date: "7/24/2020"
 output: html_document
@@ -36,7 +36,7 @@ Beta<-sal$beta
 ```
 
 ```{r}
-#Separatating the Female and male id numbers into rough and white butts
+#Separating the Female and male id numbers into rough and white butts
 
 F_R <- levels(salamander$Female)[1:10]
 F_R <- append(F_R, levels(salamander$Female)[21:30])
@@ -152,4 +152,40 @@ proc.time()-ptm
 DrBeta<-sal2$beta
 ```
 
+```{r}
+# Running the code but for no distinction b/w rb and ws
+clust<-makeCluster(4)
+set.seed(1234)
+salamander$Female_Reduced<- ReduceDim(salamander$Female,sal$u.pql[1:60])
+salamander$Male_Reduced<- ReduceDim(salamander$Male,sal$u.pql[61:120])
+ptm<-proc.time()
+sal1<-glmm(Mate~0+Cross,
+          random = list(~0+Female_Reduced,~0+Male_Reduced),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+proc.time()-ptm
+DrBeta0<-sal1$beta
+```
+```{r}
+# Predicting with diff betas and u_s
+betas<-data.frame(b0<-sal$beta,b1<-sal1$beta,b2<-sal2$beta)
+prediction<-data.frame(c(1:360))
+# Model 0 Predictions - No DR
+prediction$p0<-expit(salamander$Cross %>% betas$b0[.] + salamander$Female %>% sal$u.pql[1:60][.] + salamander$Male %>% sal$u.pql[61:120][.])
+# Model 1 Predictions -  DR on separate sexes
+prediction$p1<-expit(salamander$Cross %>% betas$b1[.] + salamander$Female_Reduced %>% as.numeric() %>% sal1$u.pql[1:25][.] + salamander$Male_Reduced %>% as.numeric() %>% sal1$u.pql[25:50][.])
+# Model 2 Predictions - DR on separate sexes and species
+prediction$p2<-expit(salamander$Cross %>% betas$b2[.] + salamander$Female_Reduced1 %>% as.numeric() %>% sal2$u.pql[1:35][.] + salamander$Male_Reduced1 %>% as.numeric() %>% sal2$u.pql[36:72][.])
+# Plotting the results
+
+library(ggplot2)
+g<-ggplot(data=prediction,aes(x=p0))+
+  geom_point(aes(y=p1,color='Just Sexes(model 1)'),key_glyph    = draw_key_point)+
+  geom_point(aes(y=p2,color='Sexes and Species(model 2)'),key_glyph =draw_key_point)+
+  geom_abline(aes(slope=1,intercept=0,color='y=x'),key_glyph = draw_key_abline)+
+  labs(color='Type of DR' ,title='Expit Function(p) under different DR conditions')+
+  xlab('p without DR(model 0) ') +
+  ylab('p with DR (model 1/2)')
+ggsave('./plots/_dr_no_dr_less_dr.png', height = 10 , width = 10)
+```
 
