@@ -1,15 +1,18 @@
 ---
-title: "Untitled"
+title: "Dimension Reduction Function"
+author:"Zachary F, Clare Hillmer,  Adit Jain"
 output: html_document
 ---
 
 ```{r}
+# Libraries used  for function
 library(glmm)
 library(plyr)
 library(dbplyr)
 ```
 
 ```{r}
+## Function Definition ##
 ReduceDim <- function(dataCol, pqlVal, roundDigits = 1){
   # Error regarding mismatch of lengths
   if(length(unique(dataCol))!= length(pqlVal)){
