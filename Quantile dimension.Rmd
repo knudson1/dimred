@@ -1,0 +1,50 @@
+---
+title: "Quantiles dimension"
+author: "Clare"
+date: "7/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(plyr)
+library(dbplyr)
+
+dimQuantile <- function(pql, quan, std){
+  
+  #creating a vector for the different outputs
+  sections <- c(1:(quan-1))
+  
+  #creating the different quantiles
+  z <- c(1:quan)/quan
+  
+  #storing the number that corresponds witht the quantile output
+  for(i in 1:(quan-1)){
+    sections[i] <- qnorm(z[i], sd = std)
+  }
+  
+  #gives a new id number based on what quantile the data falls into
+  reCode <- function(x){
+    for(j in 1:length(sections)){
+      if(x <= sections[j]){
+        return(j)
+      }
+    }
+  }
+  
+  redData <- data.frame(pql = pql)
+  
+  #applying recode to all of the data
+  newcodes <- sapply(redData$pql, reCode)
+  
+  #database for easy reading of the different functions
+  database <- data.frame(quantiles = as.factor(sections), pql = pql, divisions = as.factor(z), redDim = as.factor(newcodes))
+  
+  #returning the database along with the new code for newcode
+  return(database)
+}
+```
+
