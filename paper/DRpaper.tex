@@ -123,8 +123,6 @@ In the paper folder, I added brref.bib, which is the file that holds the bibliog
 To make the citations and bibliography work, typeset the document a few times (pdfLaTeX), typeset with BibTeX, and then typeset with pdfLaTeX again. I don't remember the right number of times for each, so I usually do each a couple. It's easier to just hit typeset (or use the typeset keyboard shortcuts) than to memorize stuff like numbers. 
 
 \section{Generalized Linear Mixed Models}
-
-<<<<<<< HEAD
 Generalized linear mixed models (GLMM) are versatile and can be used to answer a broad set of questions which can make them useful in many different fields of study.  To understand GLMM it is easiest to start with the well-known linear regression model.  This model makes assumptions about the response variable, such as the responses are independent, normal distributed, and have the same (equal) variance.  The linear models important in this paper consists of two branches, generalized linear models (GLM) and linear mixed models (LMM). 
 
 Throughout this paper, a dataset about mating salamanders will be used as an example.  This dataset includes two types of salamanders: rough butt (R) and white butt (W).  Female and male rough and white butts are involved in a series of mating trials in order to determine which type of mating combinations happen more frequently.  The different combinations (crosses) that were considered were: RW, RR, WR, and WW.
@@ -144,6 +142,15 @@ And hence approximate the likelihood function of Eq [enter eq. number from secti
 \subsection{Convergence}
 
 >>>>>>> 63aeb402d44fdeadb4b17d49878f82dca6dda95b
+
+\section{Dimension Reduction Methods}
+Three different methods were used to explore the effects of dimension reduction on runtime and response variables.  The methods used for this research were rounding, quantile grouping and lasso.  Each method will be described in detail in the following subsections.
+
+\subsection{Rounding}
+	Rounding is mathematically the most straight-forward method.  Random effects are rounded to a specific decimal place.  The rounded random effects that are the same are then collapsed into one random effect.  The two random effects for the salamander data were rounded to the nearest tenth and hundredth.  This reduced the dimensions of the random effects from 60 to 25 for both males and females when rounded to the tenth.  When rounded to the hundredths, the dimensions of the random effects were 56 for females and 58 for males.  
+
+\subsection{Quantile Grouping}
+	Since it is assumed that random effects follow a normal distribution, random effects can be collapsed by quantile.  A function was created that took in random effects, the standard deviation of the random effects and the number of quantiles wanted.  It then collapsed the dimensions of the random effects by the number of quantiles specified. 
 
 \bibliographystyle{apalike}
 \bibliography{brref}
