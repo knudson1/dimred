@@ -1,0 +1,92 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r}
+data("salamander")
+set.seed(1234)
+
+#Initial run of the glmm model without any dimension reduction
+sal <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + Female, ~ 0 + Male), varcomps.names = c("F", "M"), data = salamander, family.glmm = bernoulli.glmm, m = 10^3)
+```
+
+
+```{r}
+library(dbplyr) 
+library(plyr)
+```
+
+
+```{r}
+QuantileDR <- function(IDcolumn, pqls, numQuantiles, std){
+  
+  #creating a vector the length of the desired number of quantiles entered by the user
+  sections <- c(1:(numQuantiles))
+  
+  #creates all the probabilities needed for the qnorm function
+  z <- (c(1:numQuantiles)/numQuantiles)
+  
+  #goes through each probability and calculates the quantile cutoff
+  for (i in 1:(numQuantiles)){
+    sections[i] <- qnorm(z[i], sd = std)
+  }
+
+  #this function takes a  single pql value and goes through each quantile cutoff and returns the appropriate     section it belongs to 
+AssignPQL <- function(x){
+  for (j in 1:numQuantiles){
+    if(x <= sections[j])
+      return(j)
+  }
+}
+
+  #need to apply the function above to all the pqls
+  assigned <- (sapply(pqls,AssignPQL))
+  
+  #map the levels of the ID column to the pqls that have been newly assigned to a quantile and return
+  return(mapvalues(IDcolumn, from = levels(IDcolumn), to = assigned))
+}
+```
+
+```{r}
+#variable to easily control the number of quantiles desired
+quant <- 10
+
+#create the reduced dimensioned female and male columns in salamander data table
+salamander$FemaleReduced <- QuantileDR(salamander$Female, sal$u.pql[0:60],quant, sal$nu["F"])
+salamander$MaleReduced <- QuantileDR(salamander$Male, sal$u.pql[61:120],quant, sal$nu["M"])
+
+#run a new glmm model with reduction
+sal1 <- glmm(Mate ~ 0 + Cross, random = list(~ 0 + FemaleReduced, ~ 0 + MaleReduced), varcomps.names = c("F", "M"), data = salamander, family.glmm = bernoulli.glmm, m = 10^3)
+
+```
+
+```{r}
+#function used for graphing
+expit <- function(x){
+  return((exp(x)/(exp(x)+1)))
+}
+```
+
+```{r}
+#need to consult these to see how many dimension we actually went down to
+length(levels(salamander$FemaleReduced))
+length(levels(salamander$MaleReduced))
+```
+
+
+```{r}
+#establishing predictions that will later be graphed
+prediction <- data.frame(c(1:360))
+prediction$p0 <- expit(salamander$Cross %>% sal$beta[.] + salamander$Female %>% sal$u.pql[1:60][.] + salamander$Male %>% sal$u.pql[61:120][.])
+
+#note the different model (sal1) used and the changed lengths of the pqls needed
+prediction$p1 <- expit(salamander$Cross %>% sal1$beta[.] + salamander$FemaleReduced %>% sal1$u.pql[1:9][.] + salamander$MaleReduced %>% sal1$u.pql[10:19][.])
+```
+
+```{r}
+#final scatter plot of the original glmm and our reduced dimension version
+library(ggplot2)
+ggplot(data = prediction, aes(x = p0,y = p1)) + geom_point() + geom_abline(slope = 1, intercept = 0)
+```
+
