@@ -173,7 +173,7 @@ prediction<-data.frame(c(1:360))
 # Model 0 Predictions - No DR
 prediction$p0<-expit(salamander$Cross %>% betas$b0[.] + salamander$Female %>% sal$u.pql[1:60][.] + salamander$Male %>% sal$u.pql[61:120][.])
 # Model 1 Predictions -  DR on separate sexes
-prediction$p1<-expit(salamander$Cross %>% betas$b1[.] + salamander$Female_Reduced %>% as.numeric() %>% sal1$u.pql[1:25][.] + salamander$Male_Reduced %>% as.numeric() %>% sal1$u.pql[25:50][.])
+prediction$p1<-expit(salamander$Cross %>% betas$b1[.] + salamander$Female_Reduced %>% as.numeric() %>% sal1$u.pql[1:25][.] + salamander$Male_Reduced %>% as.numeric() %>% sal1$u.pql[26:50][.])
 # Model 2 Predictions - DR on separate sexes and species
 prediction$p2<-expit(salamander$Cross %>% betas$b2[.] + salamander$Female_Reduced1 %>% as.numeric() %>% sal2$u.pql[1:35][.] + salamander$Male_Reduced1 %>% as.numeric() %>% sal2$u.pql[36:72][.])
 # Plotting the results
@@ -181,7 +181,7 @@ prediction$p2<-expit(salamander$Cross %>% betas$b2[.] + salamander$Female_Reduce
 library(ggplot2)
 g<-ggplot(data=prediction,aes(x=p0))+
   geom_point(aes(y=p1,color='Just Sexes(model 1)'),key_glyph    = draw_key_point)+
-  geom_point(aes(y=p2,color='Sexes and Species(model 2)'),key_glyph =draw_key_point)+
+  geom_point(aes(y=p2,color='Sexes and Species(model 2)'),key_glyph =draw _key_point)+
   geom_abline(aes(slope=1,intercept=0,color='y=x'),key_glyph = draw_key_abline)+
   labs(color='Type of DR' ,title='Expit Function(p) under different DR conditions')+
   xlab('p without DR(model 0) ') +

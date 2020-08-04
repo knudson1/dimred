@@ -123,25 +123,55 @@ In the paper folder, I added brref.bib, which is the file that holds the bibliog
 To make the citations and bibliography work, typeset the document a few times (pdfLaTeX), typeset with BibTeX, and then typeset with pdfLaTeX again. I don't remember the right number of times for each, so I usually do each a couple. It's easier to just hit typeset (or use the typeset keyboard shortcuts) than to memorize stuff like numbers. 
 
 \section{Generalized Linear Mixed Models}
-Generalized linear mixed models (GLMM) are versatile and can be used to answer a broad set of questions which can make them useful in many different fields of study.  To understand GLMM it is easiest to start with the well-known linear regression model.  This model makes assumptions about the response variable, such as the responses are independent, normal distributed, and have the same (equal) variance.  The linear models important in this paper consists of two branches, generalized linear models (GLM) and linear mixed models (LMM). 
+Generalized linear mixed models (GLMM) are versatile and can be used to answer a broad set of questions which can make them useful in many different fields of study.  To understand GLMM it is easiest to start with the well-known linear regression model.  This model makes assumptions about the response variable, such as the responses are independent, normal distributed, and have the same (equal) variance.  The linear models important for the study of GLMM are generalized linear models (GLM) and linear mixed models (LMM), both of which are extensions of GLMM. 
 
 Throughout this paper, a dataset about mating salamanders will be used as an example.  This dataset includes two types of salamanders: rough butt (R) and white butt (W).  Female and male rough and white butts are involved in a series of mating trials in order to determine which type of mating combinations happen more frequently.  The different combinations (crosses) that were considered were: RW, RR, WR, and WW.
 	
-GLM encompasses the exponential family and liner models are a subset of GLM.  Examples of other models that are part of the exponential family include the binomial, poisson, and gamma models.  The link is a transformation of the response variables that makes general linear models more interpretable.  The most common types of links are the identity, logit and log link.  The salamander data follows a binomial model in that a pair of salamanders will either mate or not mate.  The binomial model requires a log link in order to transform the response variables into a continuous distribution.
+GLM encompasses the exponential family and linear models are a subset of GLM.  Examples of other models that are part of the exponential family include the binomial, poisson, and gamma models.  The link is a transformation of the response variables that makes general linear models more interpretable.  The most common types of links are the identity, logit and log link.  The salamander data follows a binomial model in that a pair of salamanders will either mate or not mate.  The binomial model requires a log link in order to transform the response variables into a continuous distribution.
 	
 LMM is a subset of GLMM that focuses specifically on linear models.  Mixed models are used to account for correlation(s) between explanatory variables.  One way to account for correlation is by adding random effects to our modeling function, which are variables assumed to be independent and identically distributed (i.i.d.).  In the salamander data there are two sets of random effects.  There are random effects for females with one variance and random effects for males with another variance.  The random effects in the salamander data come from an individual salamander’s willingness to mate.  A female salamander who mated with more males than the average female is given a positive random effect.  In contrast, a female salamander who mated less frequently than the average female is given a negative random effect. 
 	
 As explained above, the salamander data is a general linear model because it follows a binomial model that is transformed with the log link.  Furthermore, the salamander data is also a mixed model because it uses random effects for male and female salamander mating tendencies.  When these two aspects combine, a general linear model and a mixed model, the dataset can be analyzed with GLMM. 
-=======
+
 \section{Monte Carlo Likelihood Approximation}
-\subsection{Introduction}
-Since numerically integrating out the random effects for high dimensional data is not possible with the current computing power, one other technique (which is also how GLMM implemented in the R package glmm) is to simulate these random effects.
-And hence approximate the likelihood function of Eq [enter eq. number from section 1] \ref{}.
-% What is an importance sampling distribution?
+% Question to be answered in this section
+% Why do we have an integral in the first place
+% How does monte carlo methods help in estimating this integrals
+% Why is this process a slow one 
+To account for the random effects described in the previous section and get the likelihood function $L(\theta|y)$ (which will be used to calculate the coefficients) the random effects need to be integrated out of Eq. \ref{eq:pdf_uy} to obtain Eq.\ref{eq:likelihood} \\
+\begin{equation}
+f_\theta(u,y) = f_\beta(y|u)f_\nu(u)
+\label{eq:pdf_uy}
+\end{equation}
+\begin{equation}
+L(\theta{}|y) = \int f_\beta(y|u)f_\nu(u)du
+\label{eq:likelihood}
+\end{equation}
 
-\subsection{Convergence}
 
->>>>>>> 63aeb402d44fdeadb4b17d49878f82dca6dda95b
+Since numerically integrating out the random effects for high dimensional data is not possible with the current computing power, some other technique to simulate these integrals needs to be employed. One other technique (which is used in the R package glmm) is to simulate these random effects using Monte Carlo Approximation .
+
+We try to approximate the likelihood function of Eq \ref{eq:likelihood} by transforming it into a more suitable form of Eq. \ref{eq:importance} , where $\tilde{f}(u)$ is our importance sampling distribution. This is a distribution that we choose (in our case it turns out to be $N(0,1)$) in order to approximate the likelihood function. As can be shown Eq. \ref{eq:importance} is really just $E_{\tilde{f}}(\frac{f_\beta(y|u)f_\nu(u)}{\tilde{f}(u)})$. Now in order to run Monte Carlo simulations to estimate the likelihood, m values of \tilde{u} are chosen and the integral is calculated as a discrete sum of Eq. \ref{eq:estimatedsum}. Note that m is one of the parameter of the glmm package, and higher the value of m , the more closer is the estimated likelihood to the actual value. \\ 
+Now to get a fairly good estimate we need the value of m set to be fairly high (of the order of $10^4 - 10^6$ ), which although is feasible for the computer but still takes up a a lot of time depending on the machine you are running it on. glmm package currently offers cluster support on multi core processors to tackle this challenge but that in itself has a limit of how much it can speed up things and so we try and explore ways in which we can reduce the dimensions of the random effects in the first place so that the approximation process takes less time. 
+% Tell why does DR lead to reduction in time
+% How are dimensions related to MCLE? or the integral?
+% TODO
+% Add bib ref to convergence of MCLA sum
+%  is the importance sampling distribution written correctly?
+% Add what theta beta and nu are.
+
+\begin{equation}
+L(\theta{}|y) = \int \frac{f_\beta(y|u)f_\nu(u)}{\tilde{f}(u)}\tilde{f}(u)du
+% What would come as subscript of f(\tilde{u}) ?
+\label{eq:importance}
+\end{equation}
+\begin{equation}
+ \frac{1}{m} \sum\limits_{k=1}^m \frac{f_\beta(y|u_k)f_\nu(u_k)}{\tilde{f}(u_k)} =   \frac{1}{m} \sum\limits_{k=1}^m \frac{f_\theta(y,u_k)}{\tilde{f}(u_k)} 
+\label{eq:estimatedsum}
+\end{equation}
+
+
+
 
 \section{Dimension Reduction Methods}
 Three different methods were used to explore the effects of dimension reduction on runtime and response variables.  The methods used for this research were rounding, quantile grouping and lasso.  Each method will be described in detail in the following subsections.
