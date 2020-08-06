@@ -1,0 +1,161 @@
+---
+title: "Comparision between different methods of DR"
+output: html_notebook
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+## Import Libraries
+```{r}
+## Import Libraries
+library(glmm)
+library(dplyr)
+library(ggplot2)
+# Rounding DR Function
+source('../functions/RoundingDR.R')
+# Quantile DR Function
+source('../functions/QuantileDR.R')
+# Prediction Function
+source('../functions/predict.glmm.R')
+```
+## Setting Stuff
+```{r}
+# m,setting the seed and no. of clusters 
+m<-10^3
+clust<-makeCluster(4)
+set.seed(1234)
+# Loading the dataset
+data('salamander')
+```
+# Basic Salamander Model
+```{r}
+#Time Matrix
+a<-matrix(proc.time(),7,5)
+# Basic Salamander Model
+ptc=proc.time()
+sal_basic<-glmm(Mate~0+Cross,
+          random = list(~0+Female,~0+Male),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+a[1,]<-proc.time()-ptc
+```
+# Dimension Reduction Using Rounding 
+```{r}
+# Dimension Reduction Using Rounding 
+## Round == 1
+### Variable Assignment
+salamander$Female_round_1<- ReduceDim(salamander$Female,sal_basic$u.pql[1:60],1)
+salamander$Male_round_1<- ReduceDim(salamander$Male,sal_basic$u.pql[61:120],1)
+### Model
+ptc<-proc.time()
+sal_round_1<-glmm(Mate~0+Cross,
+          random = list(~0+Female_round_1,~0+Male_round_1),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+a[2,]<-ptc-proc.time()
+## Round == 2
+### Variable Assignment
+salamander$Female_round_2<- ReduceDim(salamander$Female,sal_basic$u.pql[1:60],2)
+salamander$Male_round_2<- ReduceDim(salamander$Male,sal_basic$u.pql[61:120],2)
+### Model
+ptc<-proc.time()
+sal_round_2<-glmm(Mate~0+Cross,
+          random = list(~0+Female_round_2,~0+Male_round_2),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+a[3,]<-ptc-proc.time()
+## Round == 3
+### Variable Assignment
+salamander$Female_round_3<- ReduceDim(salamander$Female,sal_basic$u.pql[1:60],3)
+salamander$Male_round_3<- ReduceDim(salamander$Male,sal_basic$u.pql[61:120],3)
+### Model
+ptc<-proc.time()
+sal_round_3<-glmm(Mate~0+Cross,
+          random = list(~0+Female_round_3,~0+Male_round_3),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+a[4,]<-ptc-proc.time()
+```
+## Dimension Reduction using Quantiles
+```{r}
+# Dimension Reduction using Quantiles
+## No. of Quantiles == 4
+### Variable Assignment
+salamander$Female_quan_1<- QuantileDR(salamander$Female,sal_basic$u.pql[1:60],4,sal_basic$nu['F']**0.5)
+salamander$Male_quan_1<- QuantileDR(salamander$Male,sal_basic$u.pql[61:120],4,sal_basic$nu['M']**0.5)
+### Model
+ptc<-proc.time()
+sal_quan_1<-glmm(Mate~0+Cross,
+          random = list(~0+Female_quan_1,~0+Male_quan_1),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+a[5,]<-ptc-proc.time()
+## No. of Quantiles == 10
+### Variable Assignment
+salamander$Female_quan_2<- QuantileDR(salamander$Female,sal_basic$u.pql[1:60],10,sal_basic$nu['F']**0.5)
+salamander$Male_quan_2<- QuantileDR(salamander$Male,sal_basic$u.pql[61:120],10,sal_basic$nu['M']**0.5)
+### Model
+ptc<-proc.time()
+sal_quan_2<-glmm(Mate~0+Cross,
+          random = list(~0+Female_quan_2,~0+Male_quan_2),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+a[6,]<-ptc-proc.time()
+## No. of Quantiles == 25
+### Variable Assignment
+salamander$Female_quan_3<- QuantileDR(salamander$Female,sal_basic$u.pql[1:60],25,sal_basic$nu['F']**0.5)
+salamander$Male_quan_3<- QuantileDR(salamander$Male,sal_basic$u.pql[61:120],25,sal_basic$nu['M']**0.5)
+### Model
+ptc<-proc.time()
+sal_quan_3<-glmm(Mate~0+Cross,
+          random = list(~0+Female_quan_3,~0+Male_quan_3),
+          varcomps.names = c("F","M"), data=salamander,
+          family.glmm = bernoulli.glmm, m=m, cluster = clust)
+a[7,]<-ptc-proc.time()
+```
+## Predictions
+```{r}
+# Predictions
+predictions<-matrix(0,360,7)
+predictions[,1]<-predict.glmm(sal_basic,'Female','Male')
+predictions[,2]<-predict.glmm(sal_basic,'Female_round_1','Male_round_1')
+predictions[,3]<-predict.glmm(sal_basic,'Female_round_2','Male_round_2')
+predictions[,4]<-predict.glmm(sal_basic,'Female_round_3','Male_round_3')
+predictions[,5]<-predict.glmm(sal_basic,'Female_quan_1','Male_quan_1')
+predictions[,6]<-predict.glmm(sal_basic,'Female_quan_2','Male_quan_2')
+predictions[,7]<-predict.glmm(sal_basic,'Female_quan_3','Male_quan_3')
+```
+## Log Likelihood
+```{r}
+# Log Likelihood
+likelihoods<-vector(length = 7)
+likelihoods[1]<-logLik(sal_basic)
+likelihoods[2]<-logLik(sal_round_1)
+likelihoods[3]<-logLik(sal_round_2)
+likelihoods[4]<-logLik(sal_round_3)
+likelihoods[5]<-logLik(sal_quan_1)
+likelihoods[6]<-logLik(sal_quan_2)
+likelihoods[7]<-logLik(sal_quan_3)
+
+```
+## Plots and Pretty Results
+```{r}
+## Data frame to store everything - time,predictions,betas and PQLs
+
+model_names<-c('Base Model Without DR','DR with Rounding=1','DR with Rounding=2','DR with Rounding=3','DR with Quantiles=4','DR with Quantiles=10','DR with Quantiles=25')
+predictions_df<-as.data.frame(predictions)
+names(predictions_df)<-model_names
+time_df<-data.frame(value=abs(a[,3]),model_name=model_names)
+likelihood_df<-data.frame(likelihood=likelihoods,model_name=model_names)
+```
+```{r}
+# Plot Time Taken
+ggplot(data=time_df,aes(x=model_name,y=value))+geom_bar(stat='identity') + theme(axis.text.x = element_text(angle = 90)) +ylab('Time Taken')
+# Plot Log Likelihood
+ggplot(data=likelihood_df,aes(x=model_name,y=likelihood))+geom_bar(stat='identity') + theme(axis.text.x = element_text(angle = 90)) +ylab('Log Likelihood')
+#Plot Predictions
+base<-do.call("rbind", replicate(7, predictions_df["Bas Model Without DR"], simplify = FALSE))
+predictions_df<-predictions_df %>% gather(mod,prediction)
+predictions_df$base<- base$`Base Model Without DR`
+```
+
